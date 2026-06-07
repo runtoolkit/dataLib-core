@@ -50,7 +50,7 @@ public final class DataLibCommand {
 
         CompletableFuture<Void> future = source.getServer()
             .reloadResources(source.getServer().getDataPackManager().getEnabledProfiles()
-                .stream().map(net.minecraft.resource.ResourcePackProfile::getName).toList());
+                .stream().map(p -> p.getInfo().id()).toList());
 
         future.whenComplete((result, error) -> {
             if (error != null) {
@@ -96,7 +96,7 @@ public final class DataLibCommand {
 
         // Enabled datapacks
         var enabled = server.getDataPackManager().getEnabledProfiles()
-            .stream().map(net.minecraft.resource.ResourcePackProfile::getName).toList();
+            .stream().map(p -> p.getInfo().id()).toList();
         source.sendFeedback(() ->
             Text.literal("Datapacks (" + enabled.size() + "):").formatted(Formatting.GOLD), false);
 
