@@ -41,12 +41,12 @@ public final class PackMetaValidator {
         int valid = 0, excluded = 0;
 
         for (ResourcePackProfile profile : profiles) {
-            // Yarn 1.21.1: ResourcePackProfile.getInfo() returns ResourcePackInfo record
-            // ResourcePackInfo record accessor: .id()
             String packName = profile.getInfo().id();
 
+            // Mod resource packs (vanilla, fabric, datalib-core, etc.) don't have a
+            // file-system pack.mcmeta readable by this validator — skip them silently.
+            // They are never subject to format/environment validation.
             PackMeta meta = readPackMeta(profile, packName);
-
             if (meta == null) {
                 DataLibCore.LOGGER.warn("[DataLib] [{}] Could not read pack.mcmeta — skipping.", packName);
                 continue;
@@ -77,6 +77,11 @@ public final class PackMetaValidator {
                     : "");
 
             VALID_PACKS.put(meta.effectiveId(), meta);
+            // Also index by packName so namespace-based lookups in CommandAliasLoader work
+            // when effectiveId differs from packName (e.g. pack has explicit "id" field).
+            if (!meta.effectiveId().equals(packName)) {
+                VALID_PACKS.put(packName, meta);
+            }
             valid++;
         }
 

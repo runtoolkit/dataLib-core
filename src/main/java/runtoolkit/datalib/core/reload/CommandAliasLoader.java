@@ -34,6 +34,9 @@ import static net.minecraft.server.command.CommandManager.literal;
  *
  * Packs excluded by PackMetaValidator (wrong pack_format or environment)
  * are silently skipped — their aliases are never registered.
+ *
+ * Exception: the mod's own namespace (datalib-core) is always allowed,
+ * since its pack.mcmeta cannot be read by the validator (it's a mod resource).
  */
 public final class CommandAliasLoader {
 
@@ -65,11 +68,13 @@ public final class CommandAliasLoader {
 
         for (var entry : resources.entrySet()) {
             Identifier id = entry.getKey();
-
-            // Derive the pack's effectiveId from the resource namespace
-            // and check if it passed PackMetaValidator
             String namespace = id.getNamespace();
-            if (!PackMetaValidator.isValid(namespace)) {
+
+            // The mod's own namespace is always trusted — its pack.mcmeta is
+            // unreadable by PackMetaValidator (mod resource, not a file/zip pack).
+            // Every other namespace must have passed validation.
+            boolean isMod = namespace.equals(DataLibCore.MOD_ID);
+            if (!isMod && !PackMetaValidator.isValid(namespace)) {
                 DataLibCore.LOGGER.debug(
                     "[DataLib] Skipping alias {} — pack '{}' did not pass validation.",
                     id, namespace);
